@@ -1,0 +1,94 @@
+Ansible Vault to encrypt your credentials and include them in your playbook. First, create a vault file with your AWS credentials.
+
+#Create aws_creds.yml
+ 
+aws_access_key: 'your_access_key'
+aws_secret_key: 'your_secret_key'
+aws_region: 'your_region'
+
+Include the Vault in Your Playbook:
+Modify your playbook to use the encrypted variables.
+
+---
+- name: Create EC2 instances
+  hosts: localhost
+  gather_facts: no
+  collections:
+    - amazon.aws
+
+  vars_files:
+    - aws_creds.yml
+
+  vars:
+    instance_type: "t2.micro"
+    ami_id: "ami-0abcdef1234567890"  # Replace with a valid AMI ID for your region
+    key_name: "your-key-pair"        # Replace with your actual key pair name
+    security_group: "your-security-group"  # Replace with your actual security group
+
+  tasks:
+    - name: Launch EC2 instances
+      amazon.aws.ec2_instance:
+        name: "MyInstance"
+        region: "{{ aws_region }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ ami_id }}"
+        key_name: "{{ key_name }}"
+        count: 2
+        wait: yes
+        security_group: "{{ security_group }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: ec2
+
+    - name: Display instance details
+      debug:
+        var: ec2
+
+ansible-playbook create_ec2_instances.yml --ask-vault-pass
+
+
+Another Methord
+
+Set Up AWS Credentials File:
+Add your credentials to the ~/.aws/credentials file.
+[default]
+aws_access_key_id = your_access_key
+aws_secret_access_key = your_secret_key
+
+
+Playbook
+
+
+---
+- name: Create EC2 instances
+  hosts: localhost
+  gather_facts: no
+  collections:
+    - amazon.aws
+
+  vars:
+    aws_region: "us-west-2"
+    instance_type: "t2.micro"
+    ami_id: "ami-0abcdef1234567890"  # Replace with a valid AMI ID for your region
+    key_name: "your-key-pair"        # Replace with your actual key pair name
+    security_group: "your-security-group"  # Replace with your actual security group
+
+  tasks:
+    - name: Launch EC2 instances
+      amazon.aws.ec2_instance:
+        name: "MyInstance"
+        region: "{{ aws_region }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ ami_id }}"
+        key_name: "{{ key_name }}"
+        count: 2
+        wait: yes
+        security_group: "{{ security_group }}"
+      register: ec2
+
+    - name: Display instance details
+      debug:
+        var: ec2
+
+
+
